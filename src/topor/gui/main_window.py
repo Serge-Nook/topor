@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 from PyQt6.QtCore import QMimeData, Qt, QUrl
+from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -70,6 +71,17 @@ class MainWindow(QMainWindow):
         central = QWidget()
         self.setCentralWidget(central)
         main_layout = QVBoxLayout(central)
+
+        # Кнопка пожертвования (правый верхний угол)
+        donate_row = QHBoxLayout()
+        donate_row.addStretch()
+        self._btn_donate = QPushButton("\u20bd")
+        self._btn_donate.setObjectName("donateButton")
+        self._btn_donate.setToolTip("Сделать пожертвование")
+        self._btn_donate.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_donate.clicked.connect(self._on_donate)
+        donate_row.addWidget(self._btn_donate)
+        main_layout.addLayout(donate_row)
 
         # Верхняя панель: выбор файлов
         file_group = QGroupBox("Входные данные")
@@ -160,6 +172,11 @@ class MainWindow(QMainWindow):
         self._btn_clear.clicked.connect(self._on_clear)
         self._btn_apply.clicked.connect(self._on_apply)
         self._btn_cancel.clicked.connect(self._on_cancel)
+
+    # ─── Donate ──────────────────────────────────────────────
+
+    def _on_donate(self) -> None:
+        QDesktopServices.openUrl(QUrl("https://nookbat.ru/donate"))
 
     # ─── File Selection ──────────────────────────────────────
 

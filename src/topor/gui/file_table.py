@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -105,14 +106,15 @@ class FileTable(QTableWidget):
         for row, meta in enumerate(self._metadata):
             if meta.path == path:
                 color_map = {
-                    "success": Qt.GlobalColor.green,
-                    "error": Qt.GlobalColor.red,
-                    "skipped": Qt.GlobalColor.yellow,
+                    "success": QColor("#0d3b2a"),
+                    "error": QColor("#3b1a1a"),
+                    "skipped": QColor("#3b3a0d"),
                 }
                 color = color_map.get(status)
                 if color:
+                    brush = QBrush(color)
                     for col in range(self.columnCount()):
                         item = self.item(row, col)
                         if item:
-                            item.setBackground(color)
+                            item.setBackground(brush)
                 break
