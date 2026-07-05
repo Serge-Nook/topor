@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from topor import __version__, __website__
+from topor import __author__, __version__, __website__
 from topor.core.engine import (
     EngineThread,
     ProcessingWorker,
@@ -132,9 +132,11 @@ class MainWindow(QMainWindow):
         self._time_panel = TimePanel()
         self._author_panel = AuthorPanel()
         self._log_panel = LogPanel()
+        self._about_panel = self._build_about_panel()
         self._tabs.addTab(self._time_panel, "Временные штампы")
         self._tabs.addTab(self._author_panel, "Метаданные автора")
         self._tabs.addTab(self._log_panel, "Журнал операций")
+        self._tabs.addTab(self._about_panel, "Об авторе")
         bottom_layout.addWidget(self._tabs)
 
         # Прогресс-бар и кнопки действий
@@ -163,6 +165,78 @@ class MainWindow(QMainWindow):
         # Статус-бар
         self._status_bar = QStatusBar()
         self.setStatusBar(self._status_bar)
+
+    def _build_about_panel(self) -> QWidget:
+        """Построить панель «Об авторе»."""
+        panel = QWidget()
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
+
+        title = QLabel(f"Топор v{__version__}")
+        title.setStyleSheet("font-size: 20px; font-weight: bold; color: #a0fff0;")
+        layout.addWidget(title)
+
+        desc = QLabel("Массовый редактор метаданных и временных штампов файлов")
+        desc.setStyleSheet("font-size: 14px; color: #80e5d0;")
+        layout.addWidget(desc)
+
+        layout.addSpacing(10)
+
+        author_label = QLabel(f"Автор: {__author__}")
+        author_label.setStyleSheet("font-size: 14px; color: #80e5d0;")
+        layout.addWidget(author_label)
+
+        site_btn = QPushButton("Сайт автора: nookbat.ru")
+        site_btn.setObjectName("linkButton")
+        site_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        site_btn.setStyleSheet(
+            "QPushButton#linkButton {"
+            "  background-color: transparent;"
+            "  color: #00bcd4;"
+            "  font-size: 14px;"
+            "  text-decoration: underline;"
+            "  border: none;"
+            "  text-align: left;"
+            "  padding: 2px 0;"
+            "}"
+            "QPushButton#linkButton:hover {"
+            "  color: #a0fff0;"
+            "}"
+        )
+        site_btn.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl("https://nookbat.ru/"))
+        )
+        layout.addWidget(site_btn)
+
+        donate_btn = QPushButton("Сделать пожертвование (nookbat.ru/donate)")
+        donate_btn.setObjectName("linkButton2")
+        donate_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        donate_btn.setStyleSheet(
+            "QPushButton#linkButton2 {"
+            "  background-color: transparent;"
+            "  color: #00bcd4;"
+            "  font-size: 14px;"
+            "  text-decoration: underline;"
+            "  border: none;"
+            "  text-align: left;"
+            "  padding: 2px 0;"
+            "}"
+            "QPushButton#linkButton2:hover {"
+            "  color: #a0fff0;"
+            "}"
+        )
+        donate_btn.clicked.connect(self._on_donate)
+        layout.addWidget(donate_btn)
+
+        layout.addSpacing(10)
+
+        license_label = QLabel("Лицензия: MIT")
+        license_label.setStyleSheet("font-size: 13px; color: #5cb8a5;")
+        layout.addWidget(license_label)
+
+        layout.addStretch()
+        return panel
 
     # ─── Signals ──────────────────────────────────────────────
 
