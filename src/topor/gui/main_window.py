@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import logging
+import os
+import shutil
+import subprocess
+import webbrowser
 from pathlib import Path
 
 from PyQt6.QtCore import QMimeData, Qt, QUrl
@@ -205,7 +209,7 @@ class MainWindow(QMainWindow):
             "}"
         )
         site_btn.clicked.connect(
-            lambda: QDesktopServices.openUrl(QUrl("https://nookbat.ru/"))
+            lambda: self._open_url("https://nookbat.ru/")
         )
         layout.addWidget(site_btn)
 
@@ -247,10 +251,35 @@ class MainWindow(QMainWindow):
         self._btn_apply.clicked.connect(self._on_apply)
         self._btn_cancel.clicked.connect(self._on_cancel)
 
-    # ─── Donate ──────────────────────────────────────────────
+    # ─── URL Opening ─────────────────────────────────────────
+
+    @staticmethod
+    def _open_url(url: str) -> None:
+        """Open URL in the system default browser with multiple fallbacks."""
+        # Try xdg-open first (most reliable on Linux, including AppImage)
+        if shutil.which("xdg-open"):
+            try:
+                subprocess.Popen(
+                    ["xdg-open", url],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                return
+            except OSError:
+                pass
+
+        # Try QDesktopServices
+        if QDesktopServices.openUrl(QUrl(url)):
+            return
+
+        # Fallback to Python webbrowser module
+        try:
+            webbrowser.open(url)
+        except Exception:
+            logger.warning("Не удалось открыть URL: %s", url)
 
     def _on_donate(self) -> None:
-        QDesktopServices.openUrl(QUrl("https://nookbat.ru/donate"))
+        self._open_url("https://nookbat.ru/donate")
 
     # ─── File Selection ──────────────────────────────────────
 
