@@ -6,7 +6,7 @@
 
 ## Описание
 
-Кроссплатформенное (Windows / Linux / macOS) десктопное приложение для пакетного изменения атрибутов файлов офисных и текстовых форматов.
+Кроссплатформенное (Windows / Linux / macOS) десктопное приложение для пакетного изменения атрибутов файлов офисных и текстовых форматов. Написано на Go — компилируется в один standalone-бинарник без внешних зависимостей.
 
 ### Возможности
 
@@ -14,12 +14,13 @@
 - Изменение метаданных автора (Author) и последнего редактора (Last Modified By)
 - Поддержка множества форматов: `docx`, `xlsx`, `docm`, `xlsm`, `doc`, `xls`, `odt`, `html`, `rtf`, `txt`, `xml`
 - Три режима установки дат: абсолютная дата, сдвиг, приравнивание
-- Drag & Drop файлов и папок
+- Выбор файлов и папок через диалоги
 - Рекурсивный обход каталогов
 - Фильтрация по маске
 - Создание резервных копий (.bak)
 - Журнал операций с подробными сообщениями
-- Многопоточная обработка с прогресс-баром и кнопкой отмены
+- Асинхронная обработка с прогресс-баром и кнопкой отмены
+- Тёмно-синий интерфейс с бирюзовым текстом
 - Русский интерфейс
 
 ## Поддерживаемые форматы
@@ -27,95 +28,71 @@
 | Группа | Форматы | Механика обработки |
 |--------|---------|-------------------|
 | Office Open XML | docx, xlsx, docm, xlsm | ZIP-контейнеры (Core Properties) |
-| OLE / Старые форматы | doc, xls | Бинарные структуры (OLE Document Summary) |
+| OLE / Старые форматы | doc, xls | Файловые штампы (бинарный OLE) |
 | OpenDocument | odt | ZIP-контейнеры (meta.xml) |
 | HTML | html, htm | Мета-теги `<meta name="author">` |
 | RTF | rtf | Внутренние тэги `{\author ...}` |
-| Текст / Разметка | txt, xml | Файловая система + расширенные атрибуты |
+| Текст / Разметка | txt, xml | Файловая система |
 
 ## Установка
 
-### Из исходников
+### Готовые пакеты
+
+Скачайте из [раздела Releases](https://github.com/Serge-Nook/topor/releases):
+
+- **Windows:** `Topor-1.0.0-Setup.exe` — установщик (Inno Setup)
+- **Debian/Ubuntu:** `topor_1.0.0_amd64.deb` — `sudo dpkg -i topor_1.0.0_amd64.deb`
+- **Arch Linux и другие:** `Topor-1.0.0-x86_64.AppImage` — сделайте исполняемым и запустите
+
+### Сборка из исходников
+
+Требуется Go 1.22+ и C-компилятор (для CGO — нужен для Fyne GUI):
 
 ```bash
-# Требования: Python 3.10+
-pip install -r requirements.txt
+# Linux
+CGO_ENABLED=1 go build -ldflags="-s -w" -o topor ./cmd/topor/
 
-# Запуск
-python -m topor
-```
-
-### Установка как пакет
-
-```bash
-pip install .
-topor
-```
-
-## Сборка установочных пакетов
-
-### Windows (.exe)
-
-Требуется [Inno Setup](https://jrsoftware.org/isinfo.php):
-
-```bash
-pip install pyinstaller
-pyinstaller --noconfirm --onedir --name topor --windowed src/topor/__main__.py
-# Затем скомпилировать packaging/windows/topor.iss через Inno Setup
-```
-
-### Linux (.deb)
-
-```bash
-./packaging/linux/build_deb.sh
-```
-
-### Linux (AppImage)
-
-```bash
-./packaging/linux/build_appimage.sh
-```
-
-### macOS (.dmg)
-
-```bash
-./packaging/macos/build_dmg.sh
+# Windows (кросс-компиляция на Linux)
+GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc \
+  go build -ldflags="-s -w -H windowsgui" -o topor.exe ./cmd/topor/
 ```
 
 ## Структура проекта
 
 ```
-src/topor/
-├── app.py                  # Точка входа
+cmd/topor/
+└── main.go                 # Точка входа
+internal/
 ├── core/
-│   ├── engine.py           # Движок обработки
-│   ├── file_discovery.py   # Поиск файлов
-│   ├── models.py           # Модели данных
-│   ├── timestamps.py       # Изменение временных штампов
-│   └── handlers/
-│       ├── base.py         # Базовый обработчик
-│       ├── ooxml.py        # docx, xlsx, docm, xlsm
-│       ├── ole.py          # doc, xls
-│       ├── odt.py          # odt
-│       ├── html_handler.py # html
-│       ├── rtf.py          # rtf
-│       └── plaintext.py    # txt, xml
+│   ├── models.go           # Модели данных и перечисления
+│   ├── discovery.go        # Поиск файлов
+│   └── timestamps.go       # Изменение временных штампов
+├── handlers/
+│   ├── handler.go          # Интерфейс и реестр обработчиков
+│   ├── ooxml.go            # docx, xlsx, docm, xlsm
+│   ├── odt.go              # odt
+│   ├── ole.go              # doc, xls
+│   ├── html.go             # html, htm
+│   ├── rtf.go              # rtf
+│   └── plaintext.go        # txt, xml
 ├── gui/
-│   ├── main_window.py      # Главное окно
-│   ├── file_table.py       # Таблица предпросмотра
-│   ├── time_panel.py       # Панель временных штампов
-│   ├── author_panel.py     # Панель автора
-│   ├── log_panel.py        # Журнал операций
-│   └── styles.py           # Стили интерфейса
+│   ├── app.go              # Главное окно и логика UI
+│   └── theme.go            # Тёмно-синяя тема
 └── utils/
-    └── backup.py           # Создание резервных копий
+    ├── backup.go           # Создание резервных копий
+    └── open_url.go         # Открытие URL в браузере
 ```
+
+## Технологии
+
+- **Go** — компиляция в standalone-бинарник
+- **Fyne v2** — кроссплатформенный GUI-фреймворк
+- Никаких внешних зависимостей при запуске — один файл
 
 ## Системные требования
 
-- Python 3.10 или выше
-- PyQt6
-- Поддерживаемые ОС: Windows 10/11, Ubuntu 20.04+, macOS 10.15+
+- Windows 10/11, Ubuntu 20.04+, Arch Linux, macOS 10.15+
+- Никаких дополнительных зависимостей — всё включено в бинарник
 
 ## Лицензия
 

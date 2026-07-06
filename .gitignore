@@ -1,16 +1,13 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
+# Binaries
 dist/
-build/
-*.egg
-.eggs/
+*.exe
+*.AppImage
 
-# Virtual environments
-venv/
-.venv/
+# Build
+squashfs-root/
+
+# Go
+vendor/
 
 # IDE
 .idea/
@@ -23,6 +20,5 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Build artifacts
-*.spec
+# Backup
 *.bak
